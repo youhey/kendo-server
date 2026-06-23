@@ -8,8 +8,16 @@ ESP32-C3 の `kendo-node` から送信される 1 秒単位の振動センサー
 
 | 変数 | デフォルト | 説明 |
 | --- | --- | --- |
-| `KENDO_ADDR` | `:8080` | HTTP listen address |
+| `KENDO_HOST_PORT` | `9401` | Docker ホスト側の公開ポート |
+| `KENDO_HTTP_PORT` | `8080` | コンテナ内の HTTP ポート |
 | `KENDO_DB_PATH` | `/data/kendo.sqlite3` | SQLite database path |
+| `KENDO_DATA_DIR` | `./data` | ホスト側の SQLite 保存ディレクトリ |
+
+Docker Compose は `.env` を読み込んで `docker-compose.yml` のポート、ボリューム、コンテナ環境変数に反映します。初回は `.env.example` をコピーして必要な値を変更してください。
+
+```bash
+cp .env.example .env
+```
 
 ## 起動
 
@@ -23,7 +31,7 @@ docker compose up -d --build
 docker compose down
 ```
 
-SQLite データベースは `./data/kendo.sqlite3` に保存されます。
+デフォルトでは `http://localhost:9401` で起動し、SQLite データベースは `./data/kendo.sqlite3` に保存されます。
 
 ## API
 

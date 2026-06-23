@@ -1,5 +1,6 @@
 /data/
 /.cache/
+/.env
 /kendo-server
 *.sqlite3
 *.sqlite3-shm

@@ -4,14 +4,14 @@ services:
     container_name: kendo-server
     restart: unless-stopped
     ports:
-      - "9401:8080"
+      - "${KENDO_HOST_PORT:-9401}:${KENDO_HTTP_PORT:-8080}"
     environment:
-      KENDO_ADDR: ":8080"
-      KENDO_DB_PATH: "/data/kendo.sqlite3"
+      KENDO_ADDR: ":${KENDO_HTTP_PORT:-8080}"
+      KENDO_DB_PATH: "${KENDO_DB_PATH:-/data/kendo.sqlite3}"
     volumes:
-      - ./data:/data
+      - "${KENDO_DATA_DIR:-./data}:/data"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:${KENDO_HTTP_PORT:-8080}/healthz"]
       interval: 30s
       timeout: 3s
       retries: 3
