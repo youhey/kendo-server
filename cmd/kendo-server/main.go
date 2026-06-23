@@ -27,7 +27,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:    cfg.Addr,
-		Handler: api.AuthMiddleware(cfg.APIToken, mux),
+		Handler: mux,
 	}
 
 	log.Printf("kendo-server listening on %s", cfg.Addr)

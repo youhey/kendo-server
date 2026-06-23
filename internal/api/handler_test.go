@@ -22,9 +22,8 @@ func TestSampleFlow(t *testing.T) {
 	handler := NewHandler(store)
 	mux := http.NewServeMux()
 	handler.Register(mux)
-	app := AuthMiddleware("secret", mux)
 
-	resp := performRequest(app, http.MethodGet, "/healthz", nil, "")
+	resp := performRequest(mux, http.MethodGet, "/healthz", nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("healthz status = %d, want %d", resp.Code, http.StatusOK)
 	}
@@ -48,12 +47,12 @@ func TestSampleFlow(t *testing.T) {
     "peak": 920
   }
 }`)
-	resp = performRequest(app, http.MethodPost, "/api/v1/samples", bytes.NewReader(payload), "secret")
+	resp = performRequest(mux, http.MethodPost, "/api/v1/samples", bytes.NewReader(payload))
 	if resp.Code != http.StatusOK {
 		t.Fatalf("post status = %d, want %d", resp.Code, http.StatusOK)
 	}
 
-	resp = performRequest(app, http.MethodGet, "/api/v1/samples/recent?node_id=ceiling-01&limit=10", nil, "secret")
+	resp = performRequest(mux, http.MethodGet, "/api/v1/samples/recent?node_id=ceiling-01&limit=10", nil)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("recent status = %d, want %d", resp.Code, http.StatusOK)
 	}
@@ -88,24 +87,6 @@ func TestSampleFlow(t *testing.T) {
 	}
 }
 
-func TestAuthRequired(t *testing.T) {
-	store, err := db.Open(filepath.Join(t.TempDir(), "kendo.sqlite3"))
-	if err != nil {
-		t.Fatalf("open db: %v", err)
-	}
-	defer store.Close()
-
-	handler := NewHandler(store)
-	mux := http.NewServeMux()
-	handler.Register(mux)
-	app := AuthMiddleware("secret", mux)
-
-	resp := performRequest(app, http.MethodGet, "/api/v1/samples/recent", nil, "")
-	if resp.Code != http.StatusUnauthorized {
-		t.Fatalf("status = %d, want %d", resp.Code, http.StatusUnauthorized)
-	}
-}
-
 func TestInvalidSample(t *testing.T) {
 	store, err := db.Open(filepath.Join(t.TempDir(), "kendo.sqlite3"))
 	if err != nil {
@@ -116,22 +97,18 @@ func TestInvalidSample(t *testing.T) {
 	handler := NewHandler(store)
 	mux := http.NewServeMux()
 	handler.Register(mux)
-	app := AuthMiddleware("secret", mux)
 
-	resp := performRequest(app, http.MethodPost, "/api/v1/samples", bytes.NewBufferString(`{"node_id":"ceiling-01","measured_at":"invalid"}`), "secret")
+	resp := performRequest(mux, http.MethodPost, "/api/v1/samples", bytes.NewBufferString(`{"node_id":"ceiling-01","measured_at":"invalid"}`))
 	if resp.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want %d", resp.Code, http.StatusBadRequest)
 	}
 }
 
-func performRequest(handler http.Handler, method, target string, body io.Reader, token string) *httptest.ResponseRecorder {
+func performRequest(handler http.Handler, method, target string, body io.Reader) *httptest.ResponseRecorder {
 	if body == nil {
 		body = bytes.NewReader(nil)
 	}
 	req := httptest.NewRequest(method, target, body)
-	if token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp := httptest.NewRecorder()

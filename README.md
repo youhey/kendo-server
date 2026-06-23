@@ -10,7 +10,6 @@ ESP32-C3 の `kendo-node` から送信される 1 秒単位の振動センサー
 | --- | --- | --- |
 | `KENDO_ADDR` | `:8080` | HTTP listen address |
 | `KENDO_DB_PATH` | `/data/kendo.sqlite3` | SQLite database path |
-| `KENDO_API_TOKEN` | なし | API Bearer Token。未設定なら起動エラー |
 
 ## 起動
 
@@ -28,11 +27,9 @@ SQLite データベースは `./data/kendo.sqlite3` に保存されます。
 
 ## API
 
-`/healthz` 以外は Bearer Token が必要です。
+この MVP では Bearer Token 認証は実装していません。`/healthz`、`/api/v1/samples`、`/api/v1/samples/recent` はすべて認証なしで利用します。
 
-```http
-Authorization: Bearer <KENDO_API_TOKEN>
-```
+家庭内 LAN / Scum サーバー上の Docker Compose 運用を前提に、ESP32-C3 側のトークン管理・設定更新コストを避け、データ収集の安定性を優先しています。外部公開、VPN 越し利用、リバースプロキシ配下での利用を行う場合は、その時点で Bearer Token またはリバースプロキシ側の認証を追加します。
 
 ### GET /healthz
 
@@ -51,7 +48,6 @@ curl -sS http://localhost:9401/healthz
 ```bash
 curl -sS -X POST http://localhost:9401/api/v1/samples \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer change-me' \
   -d '{
     "node_id": "ceiling-01",
     "seq": 1,
@@ -82,8 +78,7 @@ curl -sS -X POST http://localhost:9401/api/v1/samples \
 ### GET /api/v1/samples/recent
 
 ```bash
-curl -sS 'http://localhost:9401/api/v1/samples/recent?node_id=ceiling-01&limit=10' \
-  -H 'Authorization: Bearer change-me'
+curl -sS 'http://localhost:9401/api/v1/samples/recent?node_id=ceiling-01&limit=10'
 ```
 
 `limit` のデフォルトは `100`、最大値は `1000` です。`node_id` を省略した場合は全 node が対象です。
